@@ -98,7 +98,7 @@ python3 scripts/reddit_reader.py read <post_id_or_url> [options]
 
 | 参数 | 说明 | 默认值 | 可选值 |
 |------|------|--------|--------|
-| `post` | 帖子 ID 或完整 URL（必填） | - | - |
+| `post` | 帖子 ID、完整 URL 或分享短链接（必填） | - | - |
 | `--comment-sort` | 评论排序 | top | best, top, new, controversial, old |
 | `--comment-limit` | 评论数量 | 30 | 任意整数 |
 | `--comment-depth` | 嵌套深度 | 5 | 1-10 |
@@ -107,6 +107,9 @@ python3 scripts/reddit_reader.py read <post_id_or_url> [options]
 ```bash
 # 通过 URL 阅读
 python3 scripts/reddit_reader.py read "https://www.reddit.com/r/ClaudeAI/comments/abc123/some_title"
+
+# 通过分享短链接阅读（/s/ 格式，自动解析为真实帖子）
+python3 scripts/reddit_reader.py read "https://www.reddit.com/r/ClaudeCode/s/C3mumg2tj8"
 
 # 通过 ID 阅读，按最新评论排序
 python3 scripts/reddit_reader.py read abc123 --comment-sort new --comment-limit 50

@@ -6,7 +6,7 @@ A [Claude Code Agent Skill](https://support.claude.com/en/articles/12512176-what
 
 - **Search** - Search posts across all of Reddit or within a specific subreddit, with sort and time range filters
 - **List** - Browse subreddit posts by category (hot, new, top, rising, controversial)
-- **Read** - Read full post content with nested comment trees
+- **Read** - Read full post content with nested comment trees (supports standard URLs, share links, and post IDs)
 - **Subreddit Info** - View subreddit metadata (subscribers, description, etc.)
 
 ## Setup
@@ -68,6 +68,9 @@ python3 scripts/reddit_reader.py list r/ClaudeAI --category top --time month --l
 
 # Read a post with comments
 python3 scripts/reddit_reader.py read "https://www.reddit.com/r/ClaudeAI/comments/abc123/..."
+
+# Read via share link (/s/ format)
+python3 scripts/reddit_reader.py read "https://www.reddit.com/r/ClaudeCode/s/C3mumg2tj8"
 
 # Subreddit info
 python3 scripts/reddit_reader.py subreddit ClaudeAI

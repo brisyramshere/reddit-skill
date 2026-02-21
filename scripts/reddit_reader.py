@@ -80,12 +80,13 @@ class RedditClient:
         self.auth = auth
         self.remaining: float | None = None
 
-    def get(self, path: str, params: dict | None = None) -> dict:
+    def get(self, path: str, params: dict | None = None, allow_redirects: bool = True) -> dict:
         if self.remaining is not None and self.remaining < 5:
             time.sleep(2)
 
         url = f"{API_BASE}{path}"
-        resp = requests.get(url, headers=self.auth.headers(), params=params, timeout=30)
+        resp = requests.get(url, headers=self.auth.headers(), params=params,
+                            timeout=30, allow_redirects=allow_redirects)
 
         # Track rate limits
         if "X-Ratelimit-Remaining" in resp.headers:
@@ -95,10 +96,23 @@ class RedditClient:
             reset = float(resp.headers.get("X-Ratelimit-Reset", 60))
             print(f"Rate limited. Waiting {reset:.0f}s...", file=sys.stderr)
             time.sleep(reset)
-            return self.get(path, params)
+            return self.get(path, params, allow_redirects)
 
         resp.raise_for_status()
         return resp.json()
+
+    def resolve_share_link(self, subreddit: str, share_id: str) -> str:
+        """Resolve /s/ share link to post ID via OAuth API redirect."""
+        url = f"{API_BASE}/r/{subreddit}/s/{share_id}"
+        resp = requests.get(url, headers=self.auth.headers(),
+                            timeout=15, allow_redirects=False)
+        if resp.status_code in (301, 302, 303, 307, 308):
+            location = resp.headers.get("Location", "")
+            m = re.search(r"/comments/([a-z0-9]+)", location)
+            if m:
+                return m.group(1)
+            raise ValueError(f"Could not extract post ID from redirect: {location}")
+        raise ValueError(f"Expected redirect, got status {resp.status_code}")
 
 
 # --- Formatting Helpers ---
@@ -118,6 +132,14 @@ def truncate(text: str, max_len: int = 200) -> str:
     if not text or len(text) <= max_len:
         return text or ""
     return text[:max_len] + "..."
+
+
+def extract_share_link(input_str: str) -> tuple[str, str] | None:
+    """Extract subreddit and share_id from /s/ share link. Returns (subreddit, share_id) or None."""
+    m = re.search(r"/r/(\w+)/s/([a-zA-Z0-9]+)", input_str)
+    if m:
+        return m.group(1), m.group(2)
+    return None
 
 
 def extract_post_id(input_str: str) -> str:
@@ -316,15 +338,20 @@ def cmd_list(client: RedditClient, args: argparse.Namespace) -> None:
 
 def cmd_read(client: RedditClient, args: argparse.Namespace) -> None:
     """Read a post with its comments."""
-    post_id = extract_post_id(args.post)
-
     params = {
         "sort": args.comment_sort,
         "limit": args.comment_limit,
         "depth": args.comment_depth,
     }
 
-    # Use /comments/{id} endpoint - no subreddit needed
+    # Check for /s/ share link format first
+    share_info = extract_share_link(args.post)
+    if share_info:
+        subreddit, share_id = share_info
+        post_id = client.resolve_share_link(subreddit, share_id)
+    else:
+        post_id = extract_post_id(args.post)
+
     data = client.get(f"/comments/{post_id}", params)
 
     if not isinstance(data, list) or len(data) < 2:
