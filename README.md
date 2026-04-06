@@ -1,4 +1,4 @@
-# Reddit Reader Skill
+# Reddit Skill
 
 A [Claude Code Agent Skill](https://support.claude.com/en/articles/12512176-what-are-skills) for searching and reading Reddit content via the Reddit OAuth2 API.
 
@@ -40,10 +40,10 @@ Copy or symlink this folder to your Claude Code skills directory:
 
 ```bash
 # Option A: Symlink (recommended, stays in sync with repo)
-ln -s /path/to/reddit-skill ~/.claude/skills/reddit-reader
+ln -s /path/to/reddit-skill ~/.claude/skills/reddit-skill
 
 # Option B: Copy
-cp -r /path/to/reddit-skill ~/.claude/skills/reddit-reader
+cp -r /path/to/reddit-skill ~/.claude/skills/reddit-skill
 ```
 
 ## Usage
